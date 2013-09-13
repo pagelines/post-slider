@@ -3,6 +3,7 @@
 	Section: Post Slider
 	Author: Aleksander Hansson
 	Author URI: http://ahansson.com
+	Description: A nice way to feature your posts in a great looking slider.
 	Class Name: PostSlider
 	Cloning: true
 	Filter: slider
@@ -61,17 +62,17 @@ class PostSlider extends PageLinesSection {
 
 	$prefix = ($clone_id != '') ? 'clone'.$clone_id : '';
 
-	$sticky = ($this->opt('sticky')) ? "sticky_posts" : "";
+	$ignore_sticky = (!$sticky) ? '1': '0';
 
 	$orderby = ($this->opt('orderby')) ? $this->opt('orderby') : "post_date";
 
 	$order = ($this->opt('order')) ? $this->opt('order') : "ASC";
 
-	$posts = ($this->opt('posts')) ? $this->opt('posts') : "4";
+	$posts = ($this->opt('posts')) ? $this->opt('posts') : '4';
 
 	$category = ($this->opt('taxonomy')) ? $this->opt('taxonomy') : "";
 
-	$button = ($this->opt('button_type')) ? $this->opt('button_type') : "btn-primary";
+	$button = ($this->opt('button_type')) ? $this->opt('button_type') : "";
 
 	?>
 
@@ -80,13 +81,11 @@ class PostSlider extends PageLinesSection {
 			  	<?php
 
 					$args = array(
-						'post_status'   => 'publish',
-						'nopaging' => true,
-						'post_per_page' => $posts,
+						'post_type' => 'post',
+						'category_name' => $category,
+						'posts_per_page' => $posts,
 						'orderby' => $orderby,
 						'order'=> $order,
-						'category' => $category,
-						'post__in'  => get_option( $sticky ),
 					);
 
 					$loop = new WP_Query( $args );
@@ -166,7 +165,7 @@ class PostSlider extends PageLinesSection {
 	    	    array(
 	    	    	'key'			=> 'taxonomy',
 					'type' 			=> 'select_taxonomy',
-					'post_type'		=> 'posts',
+					'post_type'		=> 'post',
 					'label' 		=> __( 'Category to show?', 'post-slider' ),
 					'help' 			=> __( 'Select the category you want to show', 'post-slider' ),
 
@@ -194,13 +193,6 @@ class PostSlider extends PageLinesSection {
 						'ASC'   		=> array( 'name' => "Ascending Order" ),
 						'DESC'   		=> array( 'name' => "Descending Order" ),
 					),
-				),
-
-				array(
-		    	    'key'			=> 'sticky',
-					'type' 			=> 'check',
-					'label' 		=> __( 'Only show sticky posts?', 'post-slider' ),
-					'help' 			=> __( 'Check this if you only want to show sticky posts', 'post-slider' ),
 				),
 			)
 		);
