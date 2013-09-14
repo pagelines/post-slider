@@ -121,7 +121,7 @@ class PostSlider extends PageLinesSection {
 
 					}
 
-					if($output == ''){
+					if( !$loop->have_posts()){
 						$this->do_defaults();
 					} else {
 						echo $output;
