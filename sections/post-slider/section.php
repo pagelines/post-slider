@@ -62,8 +62,6 @@ class PostSlider extends PageLinesSection {
 
 	$prefix = ($clone_id != '') ? 'clone'.$clone_id : '';
 
-	$ignore_sticky = (!$sticky) ? '1': '0';
-
 	$orderby = ($this->opt('orderby')) ? $this->opt('orderby') : "post_date";
 
 	$order = ($this->opt('order')) ? $this->opt('order') : "ASC";
