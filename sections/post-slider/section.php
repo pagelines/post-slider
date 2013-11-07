@@ -144,9 +144,62 @@ class PostSlider extends PageLinesSection {
 
 		$options = array();
 
-		$options[] = array(
+		$how_to_use = __( '
+		<strong>Read the instructions below before asking for additional help:</strong>
+		</br></br>
+		<strong>1.</strong> In the frontend editor, drag the Post Slider section to a template of your choice.
+		</br></br>
+		<strong>2.</strong> Edit settings.
+		</br></br>
+		<strong>3.</strong> When you are done, hit "Publish" and refresh to see changes.
+		</br></br>
+		<div class="row zmb">
+				<div class="span6 tac zmb">
+					<a class="btn btn-info" href="http://forum.pagelines.com/71-products-by-aleksander-hansson/" target="_blank" style="padding:4px 0 4px;width:100%"><i class="icon-ambulance"></i>          Forum</a>
+				</div>
+				<div class="span6 tac zmb">
+					<a class="btn btn-info" href="http://betterdms.com" target="_blank" style="padding:4px 0 4px;width:100%"><i class="icon-align-justify"></i>          Better DMS</a>
+				</div>
+			</div>
+			<div class="row zmb" style="margin-top:4px;">
+				<div class="span12 tac zmb">
+					<a class="btn btn-success" href="http://shop.ahansson.com" target="_blank" style="padding:4px 0 4px;width:100%"><i class="icon-shopping-cart" ></i>          My Shop</a>
+				</div>
+			</div>
+		', 'post-slider' );
 
-			'title' => __( 'Slides options', 'post-slider' ),
+		$options[] = array(
+			'key' => 'post_slider_help',
+			'type'     => 'template',
+			'template'      => do_shortcode( $how_to_use ),
+			'title' =>__( 'How to use:', 'post-slider' ) ,
+		);
+
+		$options[] = array(
+			'key'				=> 'post_slider_various_settings',
+			'title'     		=>  __('Slider options', 'post-slider'),
+			'type'     			=> 'multi',
+			'opts'   			=> array(
+				array(
+					'key'			=> 'slideshow',
+					'type' 			=> 'check',
+					'label' 		=> __( 'Animate Slideshow Automatically?', 'post-slider' ),
+					'help' 			=> __( 'Autoplay the slides, transitioning every 7 seconds.', 'post-slider' ),
+				),
+				array(
+			    	'key' 			=> 'button_type',
+					'label' 		=> __('Button type', 'post-slider'),
+					'type' 			=> 'select_button',
+					'default'		=> 'btn-primary',
+					'help'			=> __('Choose the type of button you want.', 'post-slider' )
+				),
+			)
+		);
+
+
+		$options[] = array(
+			'key'	=> 'post_slider_query_settings',
+			'title' => __( 'Query Settings', 'post-slider' ),
 			'type'	=> 'multi',
 			'opts'	=> array(
 
@@ -193,27 +246,6 @@ class PostSlider extends PageLinesSection {
 					),
 				),
 			)
-		);
-
-		$options[] = array(
-			'title'     			=>  __('Slider options', 'post-slider'),
-			'type'     				=> 'multi',
-			'opts'   				=> array(
-				array(
-					'key'			=> 'slideshow',
-					'type' 			=> 'check',
-					'label' 		=> __( 'Animate Slideshow Automatically?', 'post-slider' ),
-					'help' 			=> __( 'Autoplay the slides, transitioning every 7 seconds.', 'post-slider' ),
-				),
-			)
-		);
-
-		$options[] = array(
-	    	'key' 			=> 'button_type',
-			'label' 		=> __('Button type', 'post-slider'),
-			'type' 			=> 'select_button',
-			'default'		=> 'btn-primary',
-			'help'			=> __('Choose the type of button you want.', 'post-slider' )
 		);
 
 		return $options;
