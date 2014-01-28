@@ -70,7 +70,9 @@ class PostSlider extends PageLinesSection {
 
 	$category = ($this->opt('taxonomy')) ? $this->opt('taxonomy') : "";
 
-	$button = ($this->opt('button_type')) ? $this->opt('button_type') : "";
+	$button = ($this->opt('button_type')) ? $this->opt('button_type') : "btn-primary";
+
+	$button_text = ($this->opt('button_text')) ? $this->opt('button_text') : __('Read more &rarr;','post-slider');
 
 	?>
 
@@ -107,7 +109,7 @@ class PostSlider extends PageLinesSection {
 												</h2>
 											</div>
 											<div class="btn-container">
-												<a class="btn <?php echo $button; ?> btn-large" href="<?php echo the_permalink(); ?>"><?php echo __('Read more &rarr;','post-slider'); ?></a>
+												<a class="btn <?php echo $button; ?> btn-large" href="<?php echo the_permalink(); ?>"><?php echo $button_text ?></a>
 											</div>
 										</div>
 									</div>
@@ -182,7 +184,12 @@ class PostSlider extends PageLinesSection {
 			'opts'   			=> array(
 				array(
 					'key'			=> 'slideshow',
-					'type' 			=> 'check',
+					'type' 			=> 'select',
+					'opts' 			=> array(
+						true   			=> array( 'name' => "Yes" ),
+						false   		=> array( 'name' => "No" ),
+					),
+					'default'		=> false,
 					'label' 		=> __( 'Animate Slideshow Automatically?', 'post-slider' ),
 					'help' 			=> __( 'Autoplay the slides, transitioning every 7 seconds.', 'post-slider' ),
 				),
@@ -192,6 +199,12 @@ class PostSlider extends PageLinesSection {
 					'type' 			=> 'select_button',
 					'default'		=> 'btn-primary',
 					'help'			=> __('Choose the type of button you want.', 'post-slider' )
+				),
+				array(
+					'key'			=> 'button_text',
+					'label' 		=> 'Button Text',
+					'type' 			=> 'text',
+					'default'		=> __('Read more &rarr;','post-slider'),
 				),
 			)
 		);

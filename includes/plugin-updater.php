@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) || class_exists( 'AH_PostSlider_Plugin_Updater' ) )
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * @version 0.1.3
+ * @version 0.1.4
  * @author David Chandra Purnama <david@shellcreeper.com>
  * @link http://autohosted.com/
  * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) || class_exists( 'AH_PostSlider_Plugin_Updater' ) )
  */
 class AH_PostSlider_Plugin_Updater{
 
-	/**
+/**
 	 * @var $config the config for the updater
 	 * @access public
 	 */
@@ -53,7 +53,7 @@ class AH_PostSlider_Plugin_Updater{
 			'key'         => '',
 			'dashboard'   => false,
 			'username'    => false,
-			'autohosted'  => 'plugin.0.1.3',
+			'autohosted'  => 'plugin.0.1.4',
 		);
 
 		/* merge configs and defaults */
@@ -88,46 +88,87 @@ class AH_PostSlider_Plugin_Updater{
 
 	/**
 	 * Disable request to wp.org plugin repository
+	 * this function is to remove update request data of this plugin to wp.org
+	 * so wordpress would not do update check for this plugin.
+	 *
 	 * @link http://markjaquith.wordpress.com/2009/12/14/excluding-your-plugin-or-theme-from-update-checks/
 	 * @since 0.1.2
 	 */
 	public function disable_wporg_request( $r, $url ){
 
-		/* If it's not a plugin request, bail early */
-		if ( 0 !== strpos( $url, 'http://api.wordpress.org/plugins/update-check' ) )
-			return $r;
+		/* WP.org plugin update check URL */
+		$wp_url_string = 'api.wordpress.org/plugins/update-check';
 
-		/* this plugin slug */
+		/* If it's not a plugin update check request, bail early */
+		if ( false === strpos( $url, $wp_url_string ) ){
+			return $r;
+		}
+
+		/* Get this plugin slug */
 		$plugin_slug = dirname( $this->config['base'] );
 
-		/* unserialize data */
-		$plugins = unserialize( $r['body']['plugins'] );
+		/* Get response body (json/serialize data) */
+		$r_body = wp_remote_retrieve_body( $r );
 
-		/* default value */
+		/* Get plugins request */
+		$r_plugins = '';
+		$r_plugins_json = false;
+		if( isset( $r_body['plugins'] ) ){
+
+			/* Check if data can be serialized */
+			if ( is_serialized( $r_body['plugins'] ) ){
+
+				/* unserialize data ( PRE WP 3.7 ) */
+				$r_plugins = @unserialize( $r_body['plugins'] );
+				$r_plugins = (array) $r_plugins; // convert object to array
+			}
+
+			/* if unserialize didn't work ( POST WP.3.7 using json ) */
+			else{
+				/* use json decode to make body request to array */
+				$r_plugins = json_decode( $r_body['plugins'], true );
+				$r_plugins_json = true;
+			}
+		}
+
+		/* this plugin */
 		$to_disable = '';
 
-		/* check if plugins object is set */
-		if  ( isset( $plugins->plugins ) ){
+		/* check if plugins request is not empty */
+		if  ( !empty( $r_plugins ) ){
 
-			$all_plugins = $plugins->plugins;
+			/* All plugins */
+			$all_plugins = $r_plugins['plugins'];
 
-			/* loop all plugins */
+			/* Loop all plugins */
 			foreach ( $all_plugins as $plugin_base => $plugin_data ){
 
-				/* only if the plugin have the same folder */
+				/* Only if the plugin have the same folder, because plugins can have different main file. */
 				if ( dirname( $plugin_base ) == $plugin_slug ){
 
 					/* get plugin to disable */
 					$to_disable = $plugin_base;
 				}
 			}
-		}
-		/* unset this plugin only */
-		if ( !empty( $to_disable ) )
-			unset( $plugins->plugins[ $to_disable ] );
 
-		/* serialize it back */
-		$r['body']['plugins'] = serialize( $plugins );
+			/* Unset this plugin only */
+			if ( !empty( $to_disable ) ){
+				unset(  $all_plugins[ $to_disable ] );
+			}
+
+			/* Merge plugins request back to request */
+			if ( true === $r_plugins_json ){ // json encode data
+				$r_plugins['plugins'] = $all_plugins;
+				$r['body']['plugins'] = json_encode( $r_plugins );
+			}
+			else{ // serialize data
+				$r_plugins['plugins'] = $all_plugins;
+				$r_plugins_object = (object) $r_plugins;
+				$r['body']['plugins'] = serialize( $r_plugins_object );
+			}
+		}
+
+		/* return the request */
 		return $r;
 	}
 
@@ -279,6 +320,7 @@ class AH_PostSlider_Plugin_Updater{
 		return $checked_data;
 	}
 
+
 	/**
 	 * Filter Plugin API
 	 *
@@ -291,8 +333,42 @@ class AH_PostSlider_Plugin_Updater{
 		/* Get needed data */
 		$updater_data = $this->updater_data();
 
+		/* Make sure $args is object */
+		if ( is_array($args) )
+			$args = (object)$args;
+
+		/* WP 3.7.1 get plugin slug.
+		----------------------------------- */
+		$plugin_slug = '';  /* default, empty */
+
+		/* Only if "slug" is not set yet */
+		if ( !isset( $args->slug ) ){
+
+			/* Get plugin "slug" from Plugin Info Iframe URL */
+			if ( isset( $_REQUEST['plugin'] ) ){
+				$plugin_slug = wp_unslash( $_REQUEST['plugin'] );
+			}
+
+			/* If it's not on plugin info iframe (e.g. update core page) */
+			else{
+
+				/* Check "$args" body request */
+				if ( isset( $args->body['request'] ) ){
+					$get_args_body = maybe_unserialize( $args->body['request'] );
+					if ( isset( $get_args_body->slug ) ){
+						$plugin_slug = $get_args_body->slug;
+					}
+				}
+			}
+		}
+
+		/* if "slug" is set, use it */
+		else{
+			$plugin_slug = $args->slug;
+		}
+
 		/* Get data only from current plugin, and only when call for "plugin_information" */
-		if ( isset( $args->slug ) && $args->slug == $updater_data['slug'] && $action == 'plugin_information' ){
+		if ( $plugin_slug == $updater_data['slug'] && $action == 'plugin_information' ){
 
 			/* Get data from server */
 			$remote_url = add_query_arg( array( 'plugin_repo' => $updater_data['repo_slug'], 'ahpr_info' => $updater_data['version'] ), $updater_data['repo_uri'] );
@@ -490,8 +566,9 @@ class AH_PostSlider_Plugin_Updater{
 		$widget_id = 'ahp_' . $updater_data['slug'] . '_activation_key';
 
 		/* check options is set before saving */
-		if ( isset( $_POST[$widget_id] ) ){
+		if ( isset( $_POST[$widget_id] ) && isset( $_POST['dashboard-widget-nonce'] ) && wp_verify_nonce( $_POST['dashboard-widget-nonce'], 'edit-dashboard-widget_' . $widget_id ) ){
 
+			/* get submitted data */
 			$submit_data = $_POST[$widget_id];
 
 			/* username submitted */

@@ -3,7 +3,7 @@
 	Plugin Name: Post Slider
 	Demo: http://postslider.ahansson.com
 	Description: A nice way to feature your posts in a great looking slider.
-	Version: 1.1
+	Version: 1.2
 	Author: Aleksander Hansson
 	Author URI: http://ahansson.com
 	v3: true
